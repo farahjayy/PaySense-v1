@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Models: training artefacts stay untracked, but the serving copies in
+# backend/models/ ARE committed (small, required to run the app)
+*.h5
+*.pkl
+!backend/models/*.pkl
+
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+next-env.d.ts
+*.tsbuildinfo
+.env.local
+.env*.local
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Temp
+*.tmp
+*.log

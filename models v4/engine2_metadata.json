@@ -1,0 +1,133 @@
+{
+  "engine": 2,
+  "task": "bnpl_risk_classification",
+  "winner": "Random Forest",
+  "selection_criterion": "repeated_stratified_cv_ROC_AUC_and_Brier_with_corrected_resampled_ttest",
+  "hyperparameters": "hand-set, untuned (identical treatment for Random Forest, XGBoost and LightGBM)",
+  "features": [
+    "age",
+    "employment_status",
+    "monthly_income",
+    "monthly_expenses",
+    "num_bnpl_plans",
+    "bnpl_outstanding",
+    "missed_payments",
+    "forecasted_cash_flow",
+    "income_expense_ratio",
+    "bnpl_income_ratio",
+    "savings_rate"
+  ],
+  "calibration": {
+    "method": "sigmoid (Platt scaling on log-odds of raw forest probability)",
+    "fitted_on": "5-fold out-of-fold predictions of the development set, natural class balance",
+    "chosen_over": "isotonic (no significant gain, adds plateaus/ties) and none",
+    "platt_coef": 0.9410299731105335,
+    "platt_intercept": 0.23407930378862946
+  },
+  "cv_results_5x5": {
+    "Oracle (true probability)": {
+      "F1": 0.836,
+      "ROC_AUC": 0.8818,
+      "Recall": 0.8377,
+      "Precision": 0.8347,
+      "Accuracy": 0.8,
+      "Brier": 0.1354,
+      "LogLoss": 0.4195,
+      "ECE": 0.0437
+    },
+    "Random Forest": {
+      "F1": 0.8264,
+      "ROC_AUC": 0.8676,
+      "Recall": 0.8128,
+      "Precision": 0.8409,
+      "Accuracy": 0.7924,
+      "Brier": 0.1455,
+      "LogLoss": 0.448,
+      "ECE": 0.0574
+    },
+    "LightGBM": {
+      "F1": 0.8191,
+      "ROC_AUC": 0.8573,
+      "Recall": 0.811,
+      "Precision": 0.8277,
+      "Accuracy": 0.782,
+      "Brier": 0.1591,
+      "LogLoss": 0.5151,
+      "ECE": 0.0986
+    },
+    "XGBoost": {
+      "F1": 0.8156,
+      "ROC_AUC": 0.8573,
+      "Recall": 0.8085,
+      "Precision": 0.8233,
+      "Accuracy": 0.7776,
+      "Brier": 0.1592,
+      "LogLoss": 0.5075,
+      "ECE": 0.095
+    }
+  },
+  "calibration_cv_results_5x5": {
+    "isotonic": {
+      "F1": 0.8327,
+      "ROC_AUC": 0.8639,
+      "Recall": 0.8609,
+      "Precision": 0.8073,
+      "Accuracy": 0.7896,
+      "Brier": 0.1466,
+      "LogLoss": 0.4685,
+      "ECE": 0.0493
+    },
+    "sigmoid": {
+      "F1": 0.8294,
+      "ROC_AUC": 0.8661,
+      "Recall": 0.8441,
+      "Precision": 0.8156,
+      "Accuracy": 0.7888,
+      "Brier": 0.1449,
+      "LogLoss": 0.4447,
+      "ECE": 0.0466
+    },
+    "none": {
+      "F1": 0.8245,
+      "ROC_AUC": 0.8661,
+      "Recall": 0.811,
+      "Precision": 0.8388,
+      "Accuracy": 0.79,
+      "Brier": 0.1463,
+      "LogLoss": 0.4492,
+      "ECE": 0.0559
+    }
+  },
+  "held_out_test": {
+    "raw": {
+      "F1": 0.8555,
+      "ROC_AUC": 0.8944,
+      "Recall": 0.8251,
+      "Precision": 0.8882,
+      "Accuracy": 0.83,
+      "Brier": 0.129,
+      "LogLoss": 0.4114,
+      "ECE": 0.0685
+    },
+    "calibrated": {
+      "F1": 0.8595,
+      "ROC_AUC": 0.8944,
+      "Recall": 0.8525,
+      "Precision": 0.8667,
+      "Accuracy": 0.83,
+      "Brier": 0.1271,
+      "LogLoss": 0.4028,
+      "ECE": 0.0477
+    }
+  },
+  "data": {
+    "source": "synthetic_bnpl_scenarios_v3_continuous_labels (N=2000)",
+    "split": "85% development (CV + fitting) / 15% held-out test, stratified, seed 42",
+    "smote": "applied on training folds / final training set only"
+  },
+  "library_versions": {
+    "scikit-learn": "1.7.2",
+    "numpy": "2.3.5"
+  },
+  "generated_at": "2026-09-25T13:44:05.431679"
+}

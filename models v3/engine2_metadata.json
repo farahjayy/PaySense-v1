@@ -1,0 +1,54 @@
+{
+  "engine": 2,
+  "task": "bnpl_risk_classification",
+  "winner": "LightGBM",
+  "selection_criterion": "highest_avg_F1_and_ROCAUC_recall_prioritised",
+  "features": [
+    "age",
+    "employment_status",
+    "monthly_income",
+    "monthly_expenses",
+    "num_bnpl_plans",
+    "bnpl_outstanding",
+    "missed_payments",
+    "forecasted_cash_flow",
+    "income_expense_ratio",
+    "bnpl_income_ratio",
+    "savings_rate"
+  ],
+  "results": {
+    "Random Forest": {
+      "model": "Random Forest",
+      "Accuracy": 0.8267,
+      "Precision": 0.897,
+      "Recall": 0.8087,
+      "F1": 0.8506,
+      "ROC_AUC": 0.8985,
+      "F1_AUC_avg": 0.8745
+    },
+    "XGBoost": {
+      "model": "XGBoost",
+      "Accuracy": 0.83,
+      "Precision": 0.8976,
+      "Recall": 0.8142,
+      "F1": 0.8539,
+      "ROC_AUC": 0.8924,
+      "F1_AUC_avg": 0.8732
+    },
+    "LightGBM": {
+      "model": "LightGBM",
+      "Accuracy": 0.8333,
+      "Precision": 0.908,
+      "Recall": 0.8087,
+      "F1": 0.8555,
+      "ROC_AUC": 0.8987,
+      "F1_AUC_avg": 0.8771
+    }
+  },
+  "data": {
+    "source": "synthetic_bnpl_scenarios_v3_continuous_labels (N=2000)",
+    "split": "70/15/15 train/val/test, stratified",
+    "smote": "applied on train set only"
+  },
+  "generated_at": "2026-09-16T12:57:17.364253"
+}

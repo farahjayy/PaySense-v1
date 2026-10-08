@@ -1,0 +1,26 @@
+fastapi==0.121.3
+uvicorn[standard]==0.34.0
+pydantic==2.12.5
+# 2.18.1: newest release that doesn't pull pyiceberg (no cp314 wheel, needs MSVC)
+supabase==2.18.1
+python-dotenv==1.1.0
+python-multipart==0.0.20
+numpy==2.3.5
+pandas==2.3.3
+scikit-learn==1.7.2
+# The deployed Engine 2 artefacts (engine2_winner.pkl = Random Forest,
+# engine2_calibrator.pkl = Platt LogisticRegression) are scikit-learn objects,
+# loaded with plain pickle.load — scikit-learn above is the version that
+# unpickles them (verified by scripts/smoke_test_models.py).
+# xgboost and lightgbm are no longer needed by the app at serve time; they stay
+# installed for scripts/engine2_model_comparison.py and so the historical
+# models v2 / models v3 pickles still load (xgboost 2.1.4: 3.x fails on the v2
+# pkl with "input stream corrupted").
+xgboost==2.1.4
+lightgbm==4.7.0
+shap==0.52.0
+pmdarima==2.1.1
+pdfplumber==0.11.7
+openpyxl==3.1.5
+pytest==8.4.2
+httpx==0.28.1

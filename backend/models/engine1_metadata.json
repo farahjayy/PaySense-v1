@@ -1,0 +1,33 @@
+{
+  "engine": 1,
+  "task": "cash_flow_forecasting",
+  "winner": "ARIMA",
+  "selection_criterion": "lowest_RMSE",
+  "results": {
+    "ARIMA": {
+      "model": "ARIMA",
+      "MAE": 5350.512,
+      "RMSE": 7300.3043,
+      "MAPE": 257.89
+    },
+    "Prophet": {
+      "model": "Prophet",
+      "MAE": 6518.9698,
+      "RMSE": 7607.8619,
+      "MAPE": 274.01
+    },
+    "LSTM": {
+      "model": "LSTM",
+      "MAE": 7911.6075,
+      "RMSE": 9923.0021,
+      "MAPE": 516.27
+    }
+  },
+  "data": {
+    "primary": "Personal_Finance_Dataset.csv (Kaggle 2020-2024)",
+    "personal": "farah_spending_history.xlsx (May 2025 - Mar 2026)",
+    "train": "2020-01-01 to 2023-12-01",
+    "test": "2024-01-01 to 2024-12-01"
+  },
+  "generated_at": "2026-07-06T03:37:46.969648"
+}

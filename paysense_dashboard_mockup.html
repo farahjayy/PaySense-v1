@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PaySense Dashboard Mockup</title>
+<style>
+  :root{
+    --bg-page:#F4F3EF;
+    --surface-1:#FFFFFF;
+    --surface-2:#FAFAF7;
+    --border:#E3E1D9;
+    --text-primary:#1C1C1A;
+    --text-secondary:#6B6A63;
+    --text-muted:#9A988F;
+    --accent:#185FA5;
+    --accent-bg:#E6F1FB;
+    --danger:#A32D2D;
+    --danger-bg:#FCEBEB;
+    --warning:#854F0B;
+    --warning-bg:#FAEEDA;
+    --success:#3B6D11;
+    --success-bg:#EAF3DE;
+    --radius:8px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg-page);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--text-primary);
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    min-height:100vh;
+    padding:24px;
+  }
+  .dashboard{
+    background:var(--surface-1);
+    border-radius:16px;
+    padding:24px;
+    width:1280px;
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.08);
+  }
+  h1{margin:0;font-size:22px;font-weight:600;}
+  .subtitle{margin:2px 0 0;font-size:13px;color:var(--text-secondary);}
+  .topbar{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .btn{
+    font-size:13px;padding:0 16px;height:36px;border-radius:var(--radius);
+    border:1px solid var(--border);background:var(--surface-1);color:var(--text-primary);
+    display:flex;align-items:center;gap:6px;cursor:default;
+  }
+  .btn-primary{background:var(--text-primary);color:#fff;border:none;}
+  .card{
+    background:var(--surface-2);border:1px solid var(--border);border-radius:12px;
+    padding:14px 16px;
+  }
+  .row-top{display:grid;grid-template-columns:320px 1fr;gap:14px;flex-shrink:0;}
+  .row-mid{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;flex-shrink:0;}
+  .card-title{margin:0 0 4px;font-size:14px;font-weight:600;}
+  .card-caption{margin:0 0 10px;font-size:11px;color:var(--text-muted);}
+  .label-small{font-size:12px;color:var(--text-secondary);margin:0 0 6px;}
+
+  /* gauge card */
+  .gauge-card{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:220px;}
+  .score{margin:4px 0 0;font-size:32px;font-weight:700;}
+  .score small{font-size:14px;font-weight:400;color:var(--text-secondary);}
+  .badge{margin-top:6px;font-size:12px;padding:4px 14px;border-radius:6px;font-weight:600;}
+  .badge-warning{background:var(--warning-bg);color:var(--warning);}
+  .badge-danger{background:var(--danger-bg);color:var(--danger);}
+  .badge-success{background:var(--success-bg);color:var(--success);}
+  .gauge-caption{font-size:11px;color:var(--text-muted);margin:4px 0 0;max-width:230px;}
+
+  /* forecast card */
+  .forecast-card{display:flex;flex-direction:column;min-height:220px;}
+  .month-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);padding:0 4px 0 36px;}
+
+  .row-mid .card{min-height:300px;}
+
+  /* calculator */
+  .calc-form{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;flex-shrink:0;margin-bottom:10px;}
+  .calc-form input,.calc-form select{
+    font-size:13px;height:34px;border-radius:6px;border:1px solid var(--border);
+    padding:0 10px;background:#fff;color:var(--text-primary);
+  }
+  .calc-form button{
+    font-size:13px;height:34px;border-radius:6px;background:var(--text-primary);
+    color:#fff;border:none;font-weight:600;
+  }
+  .result-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:12px;margin-bottom:10px;}
+  .result-box{background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .risk-score{font-size:28px;font-weight:700;color:var(--danger);margin:2px 0;}
+  .impact-box{background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:8px 10px;}
+  .legend{display:flex;gap:14px;font-size:10px;color:var(--text-muted);margin-top:2px;}
+  .legend span{display:flex;align-items:center;gap:5px;}
+  .dot{width:9px;height:9px;border-radius:2px;display:inline-block;}
+  .recommendation{
+    background:var(--accent-bg);color:var(--accent);border-radius:8px;
+    padding:9px 14px;font-size:12px;display:flex;gap:8px;align-items:flex-start;font-weight:500;
+  }
+
+  /* shap card */
+  .shap-link-line{font-size:11px;color:var(--text-muted);margin:0 0 8px;}
+  .shap-list{display:flex;flex-direction:column;gap:4px;}
+  .shap-item{
+    background:var(--surface-1);border:1px solid var(--border);border-radius:8px;
+    padding:8px 11px;font-size:12px;display:flex;align-items:center;gap:8px;
+    color:var(--text-primary);
+  }
+  .dot-danger{color:var(--danger);flex-shrink:0;}
+  .dot-warning{color:var(--warning);flex-shrink:0;}
+
+  /* table */
+  .table-card{display:flex;flex-direction:column;}
+  table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+  th{
+    text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);
+    padding:4px 8px;border-bottom:1px solid var(--border);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  td{padding:7px 8px;border-bottom:1px solid var(--border);}
+  td:not(.amount-cell){white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  tr:last-child td{border-bottom:none;}
+  .status-pending{color:var(--text-secondary);font-weight:600;}
+  .status-ontrack{color:var(--success);font-weight:600;}
+  .cluster-pill{
+    font-size:11px;font-weight:600;color:var(--warning);background:var(--warning-bg);
+    padding:5px 12px;border-radius:6px;white-space:nowrap;flex-shrink:0;
+  }
+  .amount-cell{display:flex;flex-direction:column;}
+  .amount-cell small{font-size:10px;color:var(--text-muted);font-weight:400;}
+  col.col-provider{width:14%;}
+  col.col-item{width:20%;}
+  col.col-instalment{width:28%;}
+  col.col-payby{width:20%;}
+  col.col-status{width:18%;}
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+
+  <div class="topbar">
+    <div>
+      <h1>Financial health dashboard</h1>
+      <p class="subtitle">Tuesday, 30 June 2026</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn">Manage BNPL plans</button>
+      <button class="btn btn-primary">+ Add transaction</button>
+    </div>
+  </div>
+
+  <div class="row-top">
+
+    <div class="card gauge-card">
+      <p class="label-small" style="font-weight:700;font-size:13px;">Financial health score</p>
+      <svg width="170" height="100" viewBox="0 0 200 120">
+        <path d="M 20 100 A 80 80 0 0 1 65 27" stroke="#E24B4A" stroke-width="16" fill="none" stroke-linecap="round"/>
+        <path d="M 68 25 A 80 80 0 0 1 132 25" stroke="#EF9F27" stroke-width="16" fill="none" stroke-linecap="round"/>
+        <path d="M 135 27 A 80 80 0 0 1 180 100" stroke="#639922" stroke-width="16" fill="none" stroke-linecap="round"/>
+        <text x="22" y="118" style="font-size:9px;fill:#9A988F;">0</text>
+        <text x="93" y="14" style="font-size:9px;fill:#9A988F;">50</text>
+        <text x="172" y="118" style="font-size:9px;fill:#9A988F;">100</text>
+        <g transform="rotate(13 100 100)">
+          <line x1="100" y1="100" x2="100" y2="35" stroke="#1C1C1A" stroke-width="3" stroke-linecap="round"/>
+        </g>
+        <circle cx="100" cy="100" r="7" fill="#1C1C1A"/>
+      </svg>
+      <p class="score" style="margin-top:0;">62<small>/100</small></p>
+      <span class="badge badge-warning" style="margin-top:2px;">Caution</span>
+      <p class="gauge-caption" style="margin-top:2px;">You're in the caution zone. Your current commitments are putting pressure on your budget — avoid overspending or missing payments to prevent slipping into the danger zone.</p>
+    </div>
+
+    <div class="card forecast-card">
+      <p class="card-title">3-month cash flow forecast</p>
+      <p class="card-caption" style="margin-bottom:6px;">Projected net cash flow per month</p>
+      <p style="margin:0 0 10px;font-size:10px;font-style:italic;color:#C2BFB5;">Income − Expenses − BNPL instalments = Net cash flow</p>
+      <svg width="100%" height="120" viewBox="0 0 760 130" preserveAspectRatio="none" style="flex:1;">
+        <text x="0" y="20" style="font-size:9px;fill:#9A988F;">+RM2k</text>
+        <text x="0" y="68" style="font-size:9px;fill:#9A988F;">RM0</text>
+        <text x="0" y="116" style="font-size:9px;fill:#9A988F;">-RM2k</text>
+        <line x1="34" y1="14" x2="760" y2="14" stroke="#EDEBE3" stroke-width="1"/>
+        <line x1="34" y1="64" x2="760" y2="64" stroke="#E3E1D9" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="34" y1="114" x2="760" y2="114" stroke="#EDEBE3" stroke-width="1"/>
+        <!-- 6 months evenly spaced: Apr=80 May=206 Jun=332 Jul=458 Aug=584 Sep=710 -->
+        <!-- solid line: Apr–Jun (historical) -->
+        <polyline points="80,24 206,48 332,76" fill="none" stroke="#185FA5" stroke-width="2.5"/>
+        <!-- dashed line: Jun–Sep (forecast) -->
+        <polyline points="332,76 458,96 584,110 710,122" fill="none" stroke="#185FA5" stroke-width="2.5" stroke-dasharray="6 4"/>
+        <!-- forecast marker at Jun -->
+        <circle cx="332" cy="76" r="4" fill="#185FA5"/>
+        <rect x="340" y="56" width="64" height="18" rx="9" fill="#E6F1FB"/>
+        <text x="372" y="68" text-anchor="middle" style="font-size:9px;fill:#185FA5;font-weight:600;">forecast →</text>
+        <!-- vertex dots -->
+        <circle cx="80"  cy="24"  r="3" fill="#185FA5"/>
+        <circle cx="206" cy="48"  r="3" fill="#185FA5"/>
+        <circle cx="458" cy="96"  r="3" fill="#185FA5"/>
+        <circle cx="584" cy="110" r="3" fill="#185FA5"/>
+        <circle cx="710" cy="122" r="3" fill="#185FA5"/>
+        <!-- labels above dots (historical), below dots (forecast to avoid pill overlap) -->
+        <text x="80"  y="14"  text-anchor="middle" style="font-size:9px;fill:#185FA5;font-weight:600;">+RM1,400</text>
+        <text x="206" y="38"  text-anchor="middle" style="font-size:9px;fill:#185FA5;font-weight:600;">+RM600</text>
+        <text x="332" y="94"  text-anchor="middle" style="font-size:9px;fill:#185FA5;font-weight:600;">-RM400</text>
+        <text x="458" y="86"  text-anchor="middle" style="font-size:9px;fill:#185FA5;font-weight:600;">-RM900</text>
+        <text x="584" y="100" text-anchor="middle" style="font-size:9px;fill:#185FA5;font-weight:600;">-RM1,400</text>
+        <text x="710" y="112" text-anchor="middle" style="font-size:9px;fill:#185FA5;font-weight:600;">-RM1,800</text>
+      </svg>
+      <svg width="100%" height="16" viewBox="0 0 760 16" preserveAspectRatio="none">
+        <text x="80"  y="12" text-anchor="middle" style="font-size:9px;fill:#9A988F;">Apr</text>
+        <text x="206" y="12" text-anchor="middle" style="font-size:9px;fill:#9A988F;">May</text>
+        <text x="332" y="12" text-anchor="middle" style="font-size:9px;fill:#9A988F;">Jun</text>
+        <text x="458" y="12" text-anchor="middle" style="font-size:9px;fill:#9A988F;">Jul</text>
+        <text x="584" y="12" text-anchor="middle" style="font-size:9px;fill:#9A988F;">Aug</text>
+        <text x="710" y="12" text-anchor="middle" style="font-size:9px;fill:#9A988F;">Sep</text>
+      </svg>
+    </div>
+
+  </div>
+
+  <div class="row-mid">
+
+    <div class="card">
+      <p class="card-title">BNPL purchase risk calculator</p>
+      <p class="card-caption">Check if a new purchase is safe before you commit</p>
+      <div class="calc-form">
+        <input placeholder="Item name">
+        <input placeholder="Price (RM)">
+        <select><option>Atome</option><option>SPayLater</option><option>GrabPayLater</option></select>
+        <select><option>3 instalments</option><option>6 instalments</option><option>12 instalments</option></select>
+        <button style="background:linear-gradient(135deg,#185FA5,#1a7fd4);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;height:34px;letter-spacing:0.4px;cursor:default;">Check Risk →</button>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-box">
+          <span class="label-small" style="margin:0;">Risk score</span>
+          <span class="risk-score">78</span>
+          <span class="badge badge-danger">At risk</span>
+        </div>
+        <div class="impact-box">
+          <p class="label-small" style="margin:0 0 4px;">Projected balance, 3 months out</p>
+          <svg width="100%" height="90" viewBox="0 0 230 90">
+            <text x="0" y="14" style="font-size:9px;fill:#9A988F;">RM</text>
+            <line x1="14" y1="72" x2="220" y2="72" stroke="#E3E1D9" stroke-width="1"/>
+            <!-- Month 1 -->
+            <rect x="22" y="36" width="16" height="36" fill="#85B7EB"/>
+            <text x="30" y="32" text-anchor="middle" style="font-size:9px;fill:#185FA5;">920</text>
+            <rect x="42" y="50" width="16" height="22" fill="#E24B4A"/>
+            <text x="50" y="46" text-anchor="middle" style="font-size:9px;fill:#A32D2D;">410</text>
+            <!-- Month 2 -->
+            <rect x="88" y="28" width="16" height="44" fill="#85B7EB"/>
+            <text x="96" y="24" text-anchor="middle" style="font-size:9px;fill:#185FA5;">1080</text>
+            <rect x="108" y="47" width="16" height="25" fill="#E24B4A"/>
+            <text x="116" y="43" text-anchor="middle" style="font-size:9px;fill:#A32D2D;">260</text>
+            <!-- Month 3 -->
+            <rect x="154" y="22" width="16" height="50" fill="#85B7EB"/>
+            <text x="162" y="18" text-anchor="middle" style="font-size:9px;fill:#185FA5;">1220</text>
+            <rect x="174" y="60" width="16" height="12" fill="#E24B4A"/>
+            <text x="182" y="56" text-anchor="middle" style="font-size:9px;fill:#A32D2D;">-90</text>
+          </svg>
+          <div class="legend">
+            <span><i class="dot" style="background:#85B7EB;"></i>without this purchase</span>
+            <span><i class="dot" style="background:#E24B4A;"></i>with this purchase</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="recommendation">
+        💡 Consider waiting 2 weeks for your next paycheck, or choosing a 12-month plan to reduce monthly strain.
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title">Why this purchase is risky</p>
+      <p class="shap-link-line">These factors pushed your risk score to 78</p>
+      <div class="shap-list">
+        <div class="shap-item"><span class="dot-danger">●</span>6 active BNPL plans already stacked</div>
+        <div class="shap-item"><span class="dot-danger">●</span>Total instalment exceed 3x your monthly income</div>
+        <div class="shap-item"><span class="dot-danger">●</span>10 missed payments in last 6 months</div>
+        <div class="shap-item"><span class="dot-warning">●</span>Forecasted cash flow leaves very little buffer — adding more commitments risks pushing your balance negative</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card table-card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;">
+      <div>
+        <p class="card-title" style="margin-bottom:2px;">Active BNPL plans</p>
+        <p class="card-caption" style="margin:0;">Your current instalment commitments this cycle</p>
+      </div>
+      <div class="cluster-pill">⚠ 3 plans due in July — RM 197.50 combined</div>
+    </div>
+    <table>
+      <colgroup>
+        <col class="col-provider"><col class="col-item"><col class="col-instalment"><col class="col-payby"><col class="col-status">
+      </colgroup>
+      <tr><th>Provider</th><th>Item</th><th>This month's instalment</th><th>Pay by</th><th>Status</th></tr>
+      <tr>
+        <td>Atome</td><td>Laptop bag</td>
+        <td class="amount-cell">RM 45.00<small>of RM 135 total</small></td>
+        <td>28 Jul 2026</td>
+        <td class="status-pending">○ Pending payment</td>
+      </tr>
+      <tr>
+        <td>SPayLater</td><td>Phone case</td>
+        <td class="amount-cell">RM 32.50<small>of RM 97.50 total</small></td>
+        <td>30 Jul 2026</td>
+        <td class="status-pending">○ Pending payment</td>
+      </tr>
+      <tr>
+        <td>GrabPayLater</td><td>Textbooks</td>
+        <td class="amount-cell">RM 120.00<small>of RM 720 total</small></td>
+        <td>14 Jul 2026</td>
+        <td class="status-ontrack">✓ On track</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+Rank,model,Accuracy,Precision,Recall,F1,ROC_AUC,F1_AUC_avg,Winner
+1,XGBoost,0.82,0.9029,0.8455,0.8732,0.8756,0.8744,✓ SELECTED
+2,LightGBM,0.8067,0.9091,0.8182,0.8612,0.8831,0.8722,
+3,Random Forest,0.81,0.9015,0.8318,0.8652,0.8763,0.8708,
