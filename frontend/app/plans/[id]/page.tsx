@@ -109,12 +109,23 @@ export default function PlanDetailPage({ params }: { params: Promise<{ id: strin
                   <h1 className="text-lg font-semibold text-ink">{plan.item_name}</h1>
                   <Chip tone={statusTone(plan.status)}>{plan.status}</Chip>
                   {riskTone && (
-                    <Chip tone={riskTone}>Risk-checked · {plan.risk_score_at_creation}/100</Chip>
+                    <Chip tone={riskTone}>
+                      {plan.risk_check_type === "current_state" ? "Current risk" : "Risk-checked"} ·{" "}
+                      {plan.risk_score_at_creation}/100
+                    </Chip>
                   )}
                 </div>
                 <p className="mt-0.5 text-[13px] text-ink-secondary">
                   {plan.provider} · started {formatDate(plan.first_payment_date)}
                 </p>
+                {plan.risk_check_id && (
+                  <Link
+                    href={`/plans/${plan.id}/risk-report`}
+                    className="mt-1 inline-block text-xs font-semibold text-accent hover:underline"
+                  >
+                    View full risk report →
+                  </Link>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button variant="secondary" size="sm" onClick={() => setIsRenaming(true)}>

@@ -74,6 +74,8 @@ export interface Plan {
   first_payment_date: string;
   status: "active" | "completed" | "overdue";
   risk_score_at_creation: number | null;
+  risk_check_id: string | null;
+  risk_check_type: "before_purchase" | "current_state" | null;
   created_at: string;
   installment_amount: number;
   total_payable: number; // sum of the plan's real instalments (computed by the API)
@@ -213,6 +215,26 @@ export interface ScheduleItem {
   paid_at_checkout?: boolean;
 }
 
+// One instalment as it stood at the moment a risk check ran — for annotating the balance
+// chart with "instalment X of Y" style labels. Always unpaid at check time, by construction.
+export interface ChartScheduleItem {
+  seq: number;
+  num_installments: number;
+  due_date: string;
+  amount: number;
+  // True only for a before_purchase check's checkout-paid instalment (e.g. Atome's first) —
+  // money left the account at the moment of purchase, not on a future date the chart's
+  // weekly resolution would otherwise imply. current_state schedules never set this: a
+  // checkout-paid instalment is already marked paid and excluded before this is built.
+  paid_at_checkout: boolean;
+}
+
+export interface Curves {
+  without_purchase: CurvePoint[];
+  with_purchase: CurvePoint[];
+  schedule: ChartScheduleItem[];
+}
+
 export interface RiskCheckResult {
   check_id: string;
   risk_probability: number;
@@ -220,7 +242,7 @@ export interface RiskCheckResult {
   label: RiskLabel;
   top_factors: RiskFactor[];
   recommendation: string;
-  curves: { without_purchase: CurvePoint[]; with_purchase: CurvePoint[] };
+  curves: Curves;
   proposed_schedule: ScheduleItem[];
 }
 
@@ -238,4 +260,16 @@ export interface ImportPreview {
   import_id: string;
   rows: ImportRow[];
   skipped: { row: number; reason: string }[];
+}
+
+export interface RiskReport {
+  check_id: string;
+  checked_at: string;
+  check_type: "before_purchase" | "current_state" | null;
+  risk_probability: number;
+  score: number;
+  label: RiskLabel;
+  top_factors: RiskFactor[];
+  recommendation: string;
+  curves: Curves | null;
 }

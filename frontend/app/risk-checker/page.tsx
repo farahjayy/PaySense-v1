@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { SchedulePreview } from "@/components/plans/SchedulePreview";
 import { OverlayChart } from "@/components/risk/OverlayChart";
+import { WhyThisScore } from "@/components/risk/WhyThisScore";
 import { Button } from "@/components/ui/Button";
 import { Card, CardCaption, CardTitle } from "@/components/ui/Card";
 import { Chip, labelTone } from "@/components/ui/Chip";
@@ -266,36 +267,7 @@ export default function RiskCheckerPage() {
               >
                 💡 {result.recommendation}
               </div>
-              <Card>
-                <CardTitle>Why this score?</CardTitle>
-                <CardCaption>Top factors pushing your risk, from the model</CardCaption>
-                <div className="mt-3 flex flex-col gap-2">
-                  {result.top_factors.length === 0 && (
-                    <p className="text-[13px] text-ink-secondary">
-                      Nothing stands out — no single factor is raising your risk noticeably.
-                    </p>
-                  )}
-                  {result.top_factors.map((factor) => (
-                    <div
-                      key={factor.feature}
-                      className="flex items-start gap-2.5 rounded-lg border border-line bg-surface-2 px-3 py-2.5 text-[13px] text-ink"
-                    >
-                      <span
-                        aria-hidden
-                        className={
-                          factor.shap_value > 0.05 ? "text-danger" : "text-warning"
-                        }
-                      >
-                        ●
-                      </span>
-                      {factor.message}
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-2.5 text-[10px] text-ink-muted">
-                  Explained by SHAP (explainable AI) on the Random Forest classifier
-                </p>
-              </Card>
+              <WhyThisScore factors={result.top_factors} />
             </div>
           </div>
 
@@ -308,6 +280,7 @@ export default function RiskCheckerPage() {
               <OverlayChart
                 withoutPurchase={result.curves.without_purchase}
                 withPurchase={result.curves.with_purchase}
+                schedule={result.curves.schedule}
               />
             </div>
           </Card>

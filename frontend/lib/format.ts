@@ -11,9 +11,18 @@ export function formatRM(value: number | null | undefined): string {
   return `${sign}RM ${RM.format(Math.abs(value))}`;
 }
 
-// Dates are shown as dd/mm/yyyy everywhere; the API and state keep ISO yyyy-mm-dd.
+// Dates display as "26 Oct 2026" everywhere; the API and state keep ISO yyyy-mm-dd.
+// Date INPUT fields are still typed as dd/mm/yyyy digits (easier to type than a month
+// name), then shown back in the same "26 Oct 2026" style once complete — see fields.tsx.
 
-/** ISO yyyy-mm-dd -> dd/mm/yyyy, or "" when it is not an ISO date. */
+/** ISO yyyy-mm-dd -> "26 Oct 2026", or "" when it is not a real ISO date. */
+export function isoToPretty(iso: string): string {
+  const date = new Date(`${iso.slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" });
+}
+
+/** ISO yyyy-mm-dd -> dd/mm/yyyy, the digit form used while typing into a DateField. */
 export function isoToDisplay(iso: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
   return match ? `${match[3]}/${match[2]}/${match[1]}` : "";
@@ -33,7 +42,7 @@ export function displayToIso(text: string): string {
 
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
-  return isoToDisplay(iso.slice(0, 10)) || "—";
+  return isoToPretty(iso.slice(0, 10)) || "—";
 }
 
 export function formatMonth(yyyyMm: string): string {
@@ -42,10 +51,11 @@ export function formatMonth(yyyyMm: string): string {
   return date.toLocaleDateString("en-MY", { month: "short", year: "2-digit" });
 }
 
-/** dd/mm (chart axes and tooltips). */
+/** "26 Dec" — chart axes and tooltips, where the year would be redundant clutter. */
 export function formatShortDate(iso: string): string {
-  const full = isoToDisplay(iso.slice(0, 10));
-  return full ? full.slice(0, 5) : iso;
+  const date = new Date(`${iso.slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleDateString("en-MY", { day: "numeric", month: "short" });
 }
 
 export function relativeTime(iso: string | null | undefined): string {

@@ -125,6 +125,8 @@ def store(monkeypatch) -> FakeStore:
             "id": plan_id,
             "status": "active",
             "risk_score_at_creation": plan.get("risk_score_at_creation"),
+            "risk_check_id": plan.get("risk_check_id"),
+            "risk_check_type": plan.get("risk_check_type"),
             "created_at": datetime.now(timezone.utc).isoformat(),
             "installments": [
                 {

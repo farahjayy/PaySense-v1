@@ -152,7 +152,8 @@ function ByPlanView() {
                 {plan.risk_score_at_creation !== null && (
                   <div className="mt-auto">
                     <Chip tone={riskBadgeTone(plan.risk_score_at_creation)}>
-                      Risk-checked · {plan.risk_score_at_creation}/100
+                      {plan.risk_check_type === "current_state" ? "Current risk" : "Risk-checked"} ·{" "}
+                      {plan.risk_score_at_creation}/100
                     </Chip>
                   </div>
                 )}

@@ -722,3 +722,184 @@ def test_dashboard_bnpl_summary_is_zeroed_with_no_plans(client):
     assert client.get("/api/dashboard").json()["bnpl_summary"] == {
         "plan_count": 0, "overdue_total": 0.0, "upcoming_total": 0.0,
     }
+
+
+# --- risk report: score on every plan, frozen SHAP snapshot ---
+
+def test_adding_an_existing_plan_runs_a_current_risk_check(client, store):
+    plan = client.post("/api/bnpl/plans", json=_plan_body("SPayLater")).json()
+    assert plan["risk_score_at_creation"] is not None
+    assert 0 <= plan["risk_score_at_creation"] <= 100
+    assert plan["risk_check_type"] == "current_state"
+    assert plan["risk_check_id"] is not None
+    stored_check = next(c for c in store.risk_checks if c["id"] == plan["risk_check_id"])
+    assert stored_check["risk_score"] == plan["risk_score_at_creation"]
+    assert stored_check["top_factors"] is not None
+
+
+def test_confirming_a_risk_check_marks_it_before_purchase(client):
+    check = client.post("/api/risk/check", json={
+        "item_name": "Phone", "total_price": 300.0, "provider": "SPayLater", "num_installments": 3,
+        "purchase_date": date.today().isoformat(), "interest_rate": 0,
+    }).json()
+    plan = client.post("/api/risk/confirm", json={"check_id": check["check_id"]}).json()
+    assert plan["risk_check_type"] == "before_purchase"
+    assert plan["risk_check_id"] == check["check_id"]
+    assert plan["risk_score_at_creation"] == check["score"]
+
+
+def test_risk_report_returns_the_frozen_check_behind_the_badge(client):
+    plan = client.post("/api/bnpl/plans", json=_plan_body("SPayLater")).json()
+    report = client.get(f"/api/bnpl/plans/{plan['id']}/risk-report").json()
+    assert report["check_id"] == plan["risk_check_id"]
+    assert report["check_type"] == "current_state"
+    assert report["score"] == plan["risk_score_at_creation"]
+    assert 0 <= report["risk_probability"] <= 1
+    assert report["label"] in ("safe", "caution", "at_risk")
+    assert len(report["top_factors"]) >= 0
+    assert isinstance(report["recommendation"], str) and report["recommendation"]
+
+
+def test_risk_report_never_recomputes_after_the_plan_state_changes(client):
+    """The report is a frozen snapshot: it must not change even after later actions
+    (e.g. marking an instalment paid) alter what a fresh check would produce."""
+    plan = client.post("/api/bnpl/plans", json=_plan_body("SPayLater")).json()
+    before = client.get(f"/api/bnpl/plans/{plan['id']}/risk-report").json()
+    client.post(f"/api/bnpl/plans/{plan['id']}/installments/1/pay", json={})
+    after = client.get(f"/api/bnpl/plans/{plan['id']}/risk-report").json()
+    assert after == before
+
+
+def test_risk_report_404s_when_the_plan_has_none(client, store):
+    plan = client.post("/api/bnpl/plans", json=_plan_body("SPayLater")).json()
+    for p in store.plans:
+        if p["id"] == plan["id"]:
+            p["risk_check_id"] = None
+    assert client.get(f"/api/bnpl/plans/{plan['id']}/risk-report").status_code == 404
+
+
+def test_risk_report_404s_for_a_missing_plan(client):
+    assert client.get("/api/bnpl/plans/nope/risk-report").status_code == 404
+
+
+def test_a_current_state_check_cannot_be_confirmed_into_a_plan(client):
+    plan = client.post("/api/bnpl/plans", json=_plan_body("SPayLater")).json()
+    response = client.post("/api/risk/confirm", json={"check_id": plan["risk_check_id"]})
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "NOT_CONFIRMABLE"
+
+
+def test_plan_creation_still_succeeds_if_the_risk_check_fails(client, store, monkeypatch):
+    from app.services import pipeline
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("model unavailable")
+
+    monkeypatch.setattr(pipeline, "run_current_risk_check", boom)
+    response = client.post("/api/bnpl/plans", json=_plan_body("SPayLater"))
+    assert response.status_code == 201
+    assert response.json()["risk_score_at_creation"] is None
+    assert response.json()["risk_check_id"] is None
+
+
+# --- risk report: balance-impact curves, frozen alongside the score ---
+
+def test_before_purchase_check_persists_its_balance_curves(client, store):
+    check = client.post("/api/risk/check", json={
+        "item_name": "Phone", "total_price": 300.0, "provider": "SPayLater", "num_installments": 3,
+        "purchase_date": date.today().isoformat(), "interest_rate": 0,
+    }).json()
+    stored = next(c for c in store.risk_checks if c["id"] == check["check_id"])
+    assert stored["curves"] == check["curves"]
+    assert len(stored["curves"]["without_purchase"]) > 0
+    assert len(stored["curves"]["with_purchase"]) > 0
+
+
+def test_current_state_check_curve_shows_the_plans_own_impact(client, store):
+    plan = client.post("/api/bnpl/plans", json=_plan_body("SPayLater")).json()
+    report = client.get(f"/api/bnpl/plans/{plan['id']}/risk-report").json()
+    without = {p["date"]: p["balance"] for p in report["curves"]["without_purchase"]}
+    with_ = {p["date"]: p["balance"] for p in report["curves"]["with_purchase"]}
+    # This plan's own instalments are excluded from "without" and included in "with", so by
+    # the end of the 13-week window the two must differ (an instalment has landed).
+    last_date = max(without)
+    assert with_[last_date] < without[last_date]
+
+
+def test_risk_report_curves_are_also_frozen(client):
+    plan = client.post("/api/bnpl/plans", json=_plan_body("SPayLater")).json()
+    before = client.get(f"/api/bnpl/plans/{plan['id']}/risk-report").json()["curves"]
+    client.post(f"/api/bnpl/plans/{plan['id']}/installments/1/pay", json={})
+    after = client.get(f"/api/bnpl/plans/{plan['id']}/risk-report").json()["curves"]
+    assert after == before
+
+
+def test_a_report_from_before_this_change_has_no_curves(client, store):
+    plan = client.post("/api/bnpl/plans", json=_plan_body("SPayLater")).json()
+    for check in store.risk_checks:
+        if check["id"] == plan["risk_check_id"]:
+            del check["curves"]
+    report = client.get(f"/api/bnpl/plans/{plan['id']}/risk-report").json()
+    assert report["curves"] is None
+
+
+# --- risk report: chart annotations need the instalment schedule alongside the curves ---
+
+def test_before_purchase_curves_include_the_full_schedule_for_chart_labels(client, store):
+    check = client.post("/api/risk/check", json={
+        "item_name": "Phone", "total_price": 300.0, "provider": "SPayLater", "num_installments": 3,
+        "purchase_date": date.today().isoformat(), "interest_rate": 0,
+    }).json()
+    schedule = check["curves"]["schedule"]
+    assert [item["seq"] for item in schedule] == [1, 2, 3]
+    assert all(item["num_installments"] == 3 for item in schedule)
+    assert schedule[0]["amount"] == 100.0
+    assert schedule[0]["due_date"] == check["proposed_schedule"][0]["due_date"]
+
+
+def test_current_state_curves_schedule_is_only_this_plans_unpaid_instalments(client, store):
+    """The router only triggers run_current_risk_check at creation (nothing can be paid yet
+    at that instant), but the function itself must still filter correctly if ever re-run
+    later — call it directly to prove that, rather than relying on router timing."""
+    from app.services import pipeline
+
+    client.post("/api/bnpl/plans", json=_plan_body("SPayLater", item_name="Other"))  # 3 unpaid, seq 1-3
+    plan = _plan_with_paid(client, item="Earbuds", paid=(1,))  # this plan's own #1 now paid
+
+    check = pipeline.run_current_risk_check(highlight_plan_id=plan["id"])
+    schedule = check["curves"]["schedule"]
+    assert [item["seq"] for item in schedule] == [2, 3]  # #1 (paid) excluded
+    assert all(item["num_installments"] == 3 for item in schedule)
+
+
+# --- chart schedule must carry paid_at_checkout, so the chart never calls it "nothing charged yet" ---
+
+def test_before_purchase_chart_schedule_flags_the_atome_checkout_instalment(client):
+    check = client.post("/api/risk/check", json={
+        "item_name": "ramen", "total_price": 30.0, "provider": "Atome", "num_installments": 3,
+        "purchase_date": date.today().isoformat(), "interest_rate": 0,
+    }).json()
+    schedule = check["curves"]["schedule"]
+    assert [item["paid_at_checkout"] for item in schedule] == [True, False, False]
+
+
+def test_before_purchase_chart_schedule_flags_nothing_for_a_pay_later_provider(client):
+    check = client.post("/api/risk/check", json={
+        "item_name": "Phone", "total_price": 300.0, "provider": "SPayLater", "num_installments": 3,
+        "purchase_date": date.today().isoformat(), "interest_rate": 0,
+    }).json()
+    schedule = check["curves"]["schedule"]
+    assert all(item["paid_at_checkout"] is False for item in schedule)
+
+
+def test_current_state_chart_schedule_never_flags_paid_at_checkout(client):
+    """current_state schedules only ever contain still-owed instalments (Atome's checkout
+    instalment is already marked paid by the time a plan exists), so this is always False —
+    but the field must still be present for the frontend type to be uniform."""
+    from app.services import pipeline
+
+    plan = client.post("/api/bnpl/plans", json=_plan_body("Atome", total_price=30.0)).json()
+    check = pipeline.run_current_risk_check(highlight_plan_id=plan["id"])
+    schedule = check["curves"]["schedule"]
+    assert len(schedule) > 0
+    assert all(item["paid_at_checkout"] is False for item in schedule)

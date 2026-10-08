@@ -47,6 +47,10 @@ def risk_confirm(body: RiskConfirmRequest):
     if check is None:
         raise not_found("CHECK_NOT_FOUND", "That risk check doesn't exist — run the check again.")
     stored_input = check["input"]
+    if stored_input.get("check_type") == "current_state":
+        raise conflict(
+            "NOT_CONFIRMABLE", "This is a status check on an existing plan, not a pending purchase."
+        )
     if stored_input.get("_confirmed_plan_id"):
         raise conflict("ALREADY_CONFIRMED", "This risk check was already saved as a plan.")
 
@@ -68,6 +72,8 @@ def risk_confirm(body: RiskConfirmRequest):
             "num_installments": stored_input["num_installments"],
             "first_payment_date": schedule[0]["due_date"].isoformat(),
             "risk_score_at_creation": check["risk_score"],
+            "risk_check_id": check["id"],
+            "risk_check_type": "before_purchase",
         },
         schedule,
     )

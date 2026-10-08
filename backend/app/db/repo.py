@@ -244,6 +244,19 @@ def assert_transactions_link_column() -> None:
         ) from exc
 
 
+def assert_bnpl_plan_risk_columns() -> None:
+    """Fail fast if migration 003 was not run (Add existing plan would otherwise silently
+    save without a score, or a risk-report link would silently fail)."""
+    try:
+        get_db().table("bnpl_plans").select("risk_check_id, risk_check_type").limit(1).execute()
+    except Exception as exc:
+        raise RuntimeError(
+            "bnpl_plans.risk_check_id/risk_check_type are missing. Run "
+            "backend/db/migrations/003_bnpl_plan_risk_check.sql in the Supabase SQL editor, "
+            "then restart the backend."
+        ) from exc
+
+
 def update_plan_status(plan_id: str, status: str) -> None:
     get_db().table("bnpl_plans").update({"status": status}).eq("id", plan_id).execute()
 

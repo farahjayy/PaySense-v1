@@ -112,6 +112,16 @@ def low_balance_factor(with_purchase_curve: list[dict]) -> dict | None:
     }
 
 
+def current_state_recommendation(label: str) -> str:
+    """For an already-existing plan's 'current risk' check — past tense, not a buy/don't-buy
+    decision like build_recommendation below."""
+    if label == "safe":
+        return "Your finances can comfortably support this plan right now."
+    if label == "caution":
+        return "This plan is adding noticeable strain to your finances — worth keeping an eye on."
+    return "This plan is a significant strain on your finances right now."
+
+
 def build_recommendation(label: str, with_purchase_curve: list[dict], forecast_months: list[dict]) -> str:
     if label == "safe":
         return "Safe to proceed — your projected balance stays healthy."

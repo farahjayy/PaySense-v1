@@ -13,7 +13,7 @@ import { Gauge } from "@/components/ui/Gauge";
 import { CardSkeleton, EmptyState, ErrorBanner } from "@/components/ui/States";
 import { api } from "@/lib/api";
 import { LABEL_TEXT } from "@/lib/constants";
-import { formatDate, formatRM, isoToDisplay, todayISO } from "@/lib/format";
+import { formatDate, formatRM, isoToPretty, todayISO } from "@/lib/format";
 import type { Dashboard } from "@/lib/types";
 import { useApi } from "@/lib/useApi";
 
@@ -27,7 +27,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-xl font-semibold text-ink">Financial health dashboard</h1>
           <p className="text-[13px] text-ink-secondary">
-            {new Date().toLocaleDateString("en-MY", { weekday: "long" })}, {isoToDisplay(todayISO())}
+            {new Date().toLocaleDateString("en-MY", { weekday: "long" })}, {isoToPretty(todayISO())}
           </p>
         </div>
         <Link href="/risk-checker">

@@ -13,6 +13,7 @@ import type {
   PlanInput,
   PlanTransactions,
   PlanUpdateInput,
+  RiskReport,
   Profile,
   RiskCheckInput,
   RiskCheckResult,
@@ -115,6 +116,7 @@ export const api = {
     ),
   updatePlan: (id: string, input: PlanUpdateInput) =>
     request<Plan>(`/api/bnpl/plans/${id}`, jsonInit("PATCH", input)),
+  planRiskReport: (id: string) => request<RiskReport>(`/api/bnpl/plans/${id}/risk-report`),
   planTransactions: (id: string) => request<PlanTransactions>(`/api/bnpl/plans/${id}/transactions`),
   // Transactions are kept unless deleteTransactions is explicitly true.
   deletePlan: (id: string, deleteTransactions = false) =>

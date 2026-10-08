@@ -10,6 +10,7 @@ from app.schemas import PayInstallmentRequest, PlanCreate, PlanUpdate
 from app.services.bills import monthly_bills
 from app.services.plan_edit import rename_plan
 from app.services.plan_transactions import find_plan_transactions, installment_description, summarize
+from app.services import pipeline
 from app.services.plans import create_plan_with_checkout_payment, derive_status, enrich_plan
 from app.services.schedule import build_schedule
 from app.services.transaction_ops import delete_payment_transaction
@@ -72,6 +73,18 @@ def create_plan(body: PlanCreate):
         },
         schedule,
     )
+    # "Add existing plan" bypasses the Risk Checker, so this is the only score it ever gets.
+    # Best-effort: a model hiccup must not block saving a plan the user already committed to.
+    try:
+        check = pipeline.run_current_risk_check(highlight_plan_id=plan["id"])
+        repo.update_plan_fields(
+            plan["id"],
+            {"risk_score_at_creation": check["score"], "risk_check_id": check["check_id"],
+             "risk_check_type": "current_state"},
+        )
+        plan = repo.get_plan(plan["id"])
+    except Exception:
+        logger.exception("Current-risk check failed for plan %s; plan saved without a score", plan["id"])
     return _serialize(plan, include_installments=True)
 
 
@@ -128,6 +141,33 @@ def update_plan(plan_id: str, body: PlanUpdate):
         raise not_found("PLAN_NOT_FOUND", "That BNPL plan doesn't exist.")
     rename_plan(plan, body.item_name)
     return _serialize(repo.get_plan(plan_id), include_installments=True)
+
+
+@router.get("/plans/{plan_id}/risk-report")
+def plan_risk_report(plan_id: str):
+    """The frozen SHAP breakdown behind the plan's risk score — never recomputed. Fetches the
+    risk_checks row the plan is linked to (set once, at 'before_purchase' confirm or
+    'current_state' creation time) so this always matches the badge shown on the plan."""
+    plan = repo.get_plan(plan_id)
+    if plan is None:
+        raise not_found("PLAN_NOT_FOUND", "That BNPL plan doesn't exist.")
+    check_id = plan.get("risk_check_id")
+    if not check_id:
+        raise not_found("NO_RISK_REPORT", "This plan has no risk report yet.")
+    check = repo.get_risk_check(check_id)
+    if check is None:
+        raise not_found("NO_RISK_REPORT", "This plan's risk report is missing.")
+    return {
+        "check_id": check["id"],
+        "checked_at": check["created_at"],
+        "check_type": plan.get("risk_check_type"),
+        "risk_probability": float(check["risk_probability"]),
+        "score": check["risk_score"],
+        "label": check["label"],
+        "top_factors": check["top_factors"],
+        "recommendation": check["recommendation"],
+        "curves": check.get("curves"),
+    }
 
 
 @router.get("/bills")

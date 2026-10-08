@@ -23,6 +23,7 @@ async def lifespan(app: FastAPI):
     # Fail fast and loud: missing env or unloadable model must stop the server.
     config.validate_env()
     repo.assert_transactions_link_column()
+    repo.assert_bnpl_plan_risk_columns()
     engine = get_engine2()
     logger.info("Startup OK — Engine 2 ready with %d features", len(engine.feature_names))
     yield

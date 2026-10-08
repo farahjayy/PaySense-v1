@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
 
-import { displayToIso, isoToDisplay } from "@/lib/format";
+import { displayToIso, isoToDisplay, isoToPretty } from "@/lib/format";
 
 function FieldShell({
   label,
@@ -75,10 +75,12 @@ function maskDate(raw: string): string {
 }
 
 /**
- * Date input that always reads dd/mm/yyyy. A native <input type="date"> shows the browser's
- * own locale format (and cannot be changed from the page), so this is a masked text field
- * with a calendar button that opens the native picker. `value` and `onValueChange` use ISO
- * yyyy-mm-dd; half-typed or impossible dates are never passed on and snap back on blur.
+ * Date input that reads "26 Oct 2026" at rest. A native <input type="date"> shows the
+ * browser's own locale format (and cannot be changed from the page), so this is a text field
+ * with a calendar button that opens the native picker. While focused it switches to a masked
+ * dd/mm/yyyy digit form (easier to type than a month name), then snaps back to "26 Oct 2026"
+ * on blur once a complete date is entered. `value`/`onValueChange` use ISO yyyy-mm-dd;
+ * half-typed or impossible dates are never passed on and snap back to the last good value.
  */
 export function DateField({
   label,
@@ -93,25 +95,28 @@ export function DateField({
   error?: string | null;
   hint?: string;
 }) {
-  const [text, setText] = useState(isoToDisplay(value));
+  const [isFocused, setIsFocused] = useState(false);
+  const [typedText, setTypedText] = useState(isoToDisplay(value));
   const [syncedValue, setSyncedValue] = useState(value);
   const pickerRef = useRef<HTMLInputElement>(null);
 
   // The parent changed the date (e.g. a new provider re-derives it): show it.
   if (value !== syncedValue) {
     setSyncedValue(value);
-    setText(isoToDisplay(value));
+    setTypedText(isoToDisplay(value));
   }
 
   const handleType = (raw: string) => {
     const masked = maskDate(raw);
-    setText(masked);
+    setTypedText(masked);
     const iso = displayToIso(masked);
     if (iso) {
       setSyncedValue(iso);
       onValueChange(iso);
     }
   };
+
+  const displayedText = isFocused ? typedText : isoToPretty(syncedValue) || "—";
 
   return (
     <FieldShell label={label} error={error} hint={hint}>
@@ -120,12 +125,17 @@ export function DateField({
           type="text"
           inputMode="numeric"
           placeholder="dd/mm/yyyy"
-          maxLength={10}
+          maxLength={isFocused ? 10 : undefined}
           className={`${INPUT_CLASSES} w-full pr-9`}
-          value={text}
+          value={displayedText}
+          onFocus={() => {
+            setIsFocused(true);
+            setTypedText(isoToDisplay(syncedValue));
+          }}
           onChange={(event) => handleType(event.target.value)}
           onBlur={() => {
-            if (!displayToIso(text)) setText(isoToDisplay(value));
+            setIsFocused(false);
+            if (!displayToIso(typedText)) setTypedText(isoToDisplay(syncedValue));
           }}
         />
         <button

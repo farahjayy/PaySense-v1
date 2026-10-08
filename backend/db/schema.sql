@@ -63,8 +63,17 @@ create table risk_checks (
     label text not null check (label in ('safe', 'caution', 'at_risk')),
     top_factors jsonb not null,
     recommendation text not null,
+    curves jsonb,
     created_at timestamptz not null default now()
 );
+
+-- Links a plan to the risk_checks row behind its score, so the score always has a full,
+-- frozen SHAP breakdown available (see "View full risk report").
+alter table bnpl_plans
+    add column risk_check_id uuid references risk_checks(id) on delete set null;
+alter table bnpl_plans
+    add column risk_check_type text check (risk_check_type in ('before_purchase', 'current_state'));
+create index idx_bnpl_plans_risk_check on bnpl_plans (risk_check_id);
 
 create table app_state (
     id int primary key check (id = 1),
